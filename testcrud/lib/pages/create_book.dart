@@ -48,6 +48,7 @@ class _BookFormState extends State<BookForm> {
               ElevatedButton(
                 onPressed: () {
                   _sendRequest();
+                  Navigator.pop(context);
                 },
                 child: Text('Submit'),
               ),

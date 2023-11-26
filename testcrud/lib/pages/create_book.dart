@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:testcrud/widgets/all_books.dart';
 
 import '../models/books_model.dart';
 import '../providers/books_provider.dart';
+//import 'books_list.dart'; // Import the book list screen
 
 class BookForm extends StatefulWidget {
   @override
@@ -19,7 +21,7 @@ class _BookFormState extends State<BookForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Book'),
+        title: Text('Book Details'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -29,11 +31,11 @@ class _BookFormState extends State<BookForm> {
             children: [
               TextFormField(
                 controller: nameController,
-                decoration: InputDecoration(labelText: 'Book Name'),
+                decoration: const InputDecoration(labelText: 'Book Name'),
               ),
               TextFormField(
                 controller: authorController,
-                decoration: InputDecoration(labelText: 'Author'),
+                decoration: const InputDecoration(labelText: 'Author'),
               ),
               TextFormField(
                 controller: categoryController,
@@ -45,13 +47,34 @@ class _BookFormState extends State<BookForm> {
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
               ),
               SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  _sendRequest();
-                  Navigator.pop(context);
-                },
-                child: Text('Submit'),
-              ),
+              Row(
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      _sendRequest(CreateOrUpdateAction.Create, context);
+                    },
+                    child: Text('Create'),
+                  ),
+                  SizedBox(
+                    width: 5,
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      _sendRequest(CreateOrUpdateAction.Update, context);
+                    },
+                    child: Text('Update'),
+                  ),
+                  SizedBox(
+                    width: 5,
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      _sendRequest(CreateOrUpdateAction.Delete, context);
+                    },
+                    child: Text('Delete'),
+                  ),
+                ],
+              )
             ],
           ),
         ),
@@ -59,7 +82,8 @@ class _BookFormState extends State<BookForm> {
     );
   }
 
-  Future<void> _sendRequest() async {
+  Future<void> _sendRequest(
+      CreateOrUpdateAction action, BuildContext context) async {
     final newBook = Books(
       name: nameController.text,
       author: authorController.text,
@@ -68,13 +92,40 @@ class _BookFormState extends State<BookForm> {
     );
 
     try {
-      await Provider.of<BooksProvider>(context, listen: false)
-          .createBook(newBook);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Book created successfully!')));
+      if (action == CreateOrUpdateAction.Create) {
+        await Provider.of<BooksProvider>(context, listen: false)
+            .createBook(newBook);
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Book created successfully!')));
+      } else if (action == CreateOrUpdateAction.Update) {
+        // Replace '123' with the actual book ID for the book you want to update
+        final bookId = '123';
+        await Provider.of<BooksProvider>(context, listen: false)
+            .updateBook(newBook, bookId);
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Book updated successfully!')));
+      } else if (action == CreateOrUpdateAction.Delete) {
+        // Replace '123' with the actual book ID for the book you want to delete
+        final bookId = '123';
+        await Provider.of<BooksProvider>(context, listen: false)
+            .deleteBook(bookId as int);
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Book deleted successfully!')));
+
+        // Navigate back to the book list screen after deletion
+        Navigator.pop(context);
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => BooksList()));
+      }
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create book: $error')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Failed: $error')));
     }
   }
+}
+
+enum CreateOrUpdateAction {
+  Create,
+  Update,
+  Delete,
 }

@@ -49,7 +49,7 @@ class _BooksListState extends State<BooksList> {
                         IconButton(
                           icon: Icon(Icons.edit),
                           onPressed: () {
-                            _editBook(context, booksProvider, book);
+                            _editBook(context, booksProvider, book, index);
                           },
                         ),
                         IconButton(
@@ -70,12 +70,19 @@ class _BooksListState extends State<BooksList> {
     );
   }
 
-  void _editBook(
-      BuildContext context, BooksProvider booksProvider, Books book) {
+  void _editBook(BuildContext context, BooksProvider booksProvider, Books book,
+      int index) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => BookForm(),
+        builder: (context) => BookForm(
+          index: index,
+          id: booksProvider.books[index].id,
+          author: booksProvider.books[index].author,
+          bookName: booksProvider.books[index].name,
+          category: booksProvider.books[index].catogory,
+          price: booksProvider.books[index].price,
+        ),
       ),
     ).then((result) {
       if (result == true) {
@@ -102,9 +109,8 @@ class _BooksListState extends State<BooksList> {
             ),
             TextButton(
               onPressed: () {
-                booksProvider.deleteBook(book.name as int);
-                Navigator.pop(
-                    context, true); // Signal deletion to refresh the list
+                booksProvider.deleteBook(book.id);
+                Navigator.pop(context, true);
               },
               child: const Text('Yes'),
             ),

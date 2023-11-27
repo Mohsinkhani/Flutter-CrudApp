@@ -66,7 +66,7 @@ class BooksProvider with ChangeNotifier {
 
     try {
       final apiUrl =
-          'http://10.0.2.2:5263/api/books/${updatedBook}'; // Assuming your API supports updating by ID
+          'http://10.0.2.2:5263/api/books/${bookId}'; // Assuming your API supports updating by ID
       final response = await http.put(
         Uri.parse(apiUrl),
         headers: <String, String>{
@@ -75,7 +75,7 @@ class BooksProvider with ChangeNotifier {
         body: jsonEncode(updatedBook.toJson()),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 204) {
         // Update the local list with the updated book
         int index = _books.indexWhere((book) => book == updatedBook);
         if (index != -1) {
@@ -94,19 +94,21 @@ class BooksProvider with ChangeNotifier {
     }
   }
 
-  Future<void> deleteBook(int bookId) async {
+  Future<void> deleteBook(String id) async {
     _isLoading = true;
 
+    final apiUrl = 'http://10.0.2.2:5263/api/books/${id}';
+
     try {
-      final apiUrl = 'http://10.0.2.2:5263/api/books/$bookId';
       final response = await http.delete(Uri.parse(apiUrl));
 
-      if (response.statusCode == 200) {
-        // Remove the book from the local list
-        _books.removeWhere((book) => book == bookId);
+      if (response.statusCode == 204) {
+        _books.removeWhere((book) => book.id == id);
+        notifyListeners();
       } else {
         throw Exception(
-            'Failed to delete book. Status Code: ${response.statusCode}');
+          'Failed to delete book. Status Code: ${response.statusCode}',
+        );
       }
     } catch (error) {
       _error = error.toString();

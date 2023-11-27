@@ -7,15 +7,46 @@ import '../providers/books_provider.dart';
 //import 'books_list.dart'; // Import the book list screen
 
 class BookForm extends StatefulWidget {
+  final int? index;
+  final String? id;
+  final String? bookName;
+  final String? author;
+  final String? category;
+  final double? price;
+
+  BookForm(
+      {this.index,
+      this.bookName,
+      this.author,
+      this.category,
+      this.price,
+      this.id});
   @override
   _BookFormState createState() => _BookFormState();
 }
 
 class _BookFormState extends State<BookForm> {
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController authorController = TextEditingController();
-  final TextEditingController categoryController = TextEditingController();
-  final TextEditingController priceController = TextEditingController();
+  TextEditingController nameController = TextEditingController();
+  TextEditingController authorController = TextEditingController();
+  TextEditingController categoryController = TextEditingController();
+  TextEditingController priceController = TextEditingController();
+
+  void initState() {
+    super.initState();
+
+    // Populate the form fields with book details when editing
+    if (widget.index != null) {
+      nameController.text = widget.bookName!;
+      authorController.text = widget.author!;
+      categoryController.text = widget.category!;
+      priceController.text = widget.price!.toString();
+    } else {
+      nameController = TextEditingController();
+      authorController = TextEditingController();
+      categoryController = TextEditingController();
+      priceController = TextEditingController();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,11 +116,11 @@ class _BookFormState extends State<BookForm> {
   Future<void> _sendRequest(
       CreateOrUpdateAction action, BuildContext context) async {
     final newBook = Books(
-      name: nameController.text,
-      author: authorController.text,
-      catogory: categoryController.text,
-      price: double.parse(priceController.text),
-    );
+        name: nameController.text,
+        author: authorController.text,
+        catogory: categoryController.text,
+        price: double.parse(priceController.text),
+        id: widget.id.toString());
 
     try {
       if (action == CreateOrUpdateAction.Create) {
@@ -99,16 +130,16 @@ class _BookFormState extends State<BookForm> {
             SnackBar(content: Text('Book created successfully!')));
       } else if (action == CreateOrUpdateAction.Update) {
         // Replace '123' with the actual book ID for the book you want to update
-        final bookId = '123';
+        final bookId = widget.id.toString();
         await Provider.of<BooksProvider>(context, listen: false)
             .updateBook(newBook, bookId);
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Book updated successfully!')));
       } else if (action == CreateOrUpdateAction.Delete) {
         // Replace '123' with the actual book ID for the book you want to delete
-        final bookId = '123';
+        final bookId = widget.id.toString();
         await Provider.of<BooksProvider>(context, listen: false)
-            .deleteBook(bookId as int);
+            .deleteBook(bookId);
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Book deleted successfully!')));
 

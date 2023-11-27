@@ -1,10 +1,12 @@
 class Books {
+  final String id;
   final String name;
   final String catogory;
   final String author;
   final double price;
 
   Books({
+    this.id = '',
     required this.name,
     required this.catogory,
     required this.author,

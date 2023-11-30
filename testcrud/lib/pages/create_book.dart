@@ -52,7 +52,7 @@ class _BookFormState extends State<BookForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Book Details'),
+        title: Text(widget.id != null ? 'Book Details' : 'Add New Book'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -84,25 +84,7 @@ class _BookFormState extends State<BookForm> {
                     onPressed: () {
                       _sendRequest(CreateOrUpdateAction.Create, context);
                     },
-                    child: Text('Create'),
-                  ),
-                  SizedBox(
-                    width: 5,
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      _sendRequest(CreateOrUpdateAction.Update, context);
-                    },
-                    child: Text('Update'),
-                  ),
-                  SizedBox(
-                    width: 5,
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      _sendRequest(CreateOrUpdateAction.Delete, context);
-                    },
-                    child: Text('Delete'),
+                    child: Text(widget.id == null ? 'Create' : 'Update'),
                   ),
                 ],
               )

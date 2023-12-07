@@ -14,13 +14,15 @@ class BookForm extends StatefulWidget {
   final String? category;
   final double? price;
 
-  BookForm(
-      {this.index,
-      this.bookName,
-      this.author,
-      this.category,
-      this.price,
-      this.id});
+  BookForm({
+    this.index,
+    this.bookName,
+    this.author,
+    this.category,
+    this.price,
+    this.id,
+  });
+
   @override
   _BookFormState createState() => _BookFormState();
 }
@@ -31,6 +33,7 @@ class _BookFormState extends State<BookForm> {
   TextEditingController categoryController = TextEditingController();
   TextEditingController priceController = TextEditingController();
 
+  @override
   void initState() {
     super.initState();
 
@@ -40,11 +43,6 @@ class _BookFormState extends State<BookForm> {
       authorController.text = widget.author!;
       categoryController.text = widget.category!;
       priceController.text = widget.price!.toString();
-    } else {
-      nameController = TextEditingController();
-      authorController = TextEditingController();
-      categoryController = TextEditingController();
-      priceController = TextEditingController();
     }
   }
 
@@ -98,11 +96,12 @@ class _BookFormState extends State<BookForm> {
   Future<void> _sendRequest(
       CreateOrUpdateAction action, BuildContext context) async {
     final newBook = Books(
-        name: nameController.text,
-        author: authorController.text,
-        catogory: categoryController.text,
-        price: double.parse(priceController.text),
-        id: widget.id.toString());
+      name: nameController.text,
+      author: authorController.text,
+      catogory: categoryController.text,
+      price: double.parse(priceController.text),
+      // id: action != CreateOrUpdateAction.Create ? widget.id : null,
+    );
 
     try {
       if (action == CreateOrUpdateAction.Create) {
@@ -111,21 +110,18 @@ class _BookFormState extends State<BookForm> {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Book created successfully!')));
       } else if (action == CreateOrUpdateAction.Update) {
-        // Replace '123' with the actual book ID for the book you want to update
         final bookId = widget.id.toString();
         await Provider.of<BooksProvider>(context, listen: false)
             .updateBook(newBook, bookId);
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Book updated successfully!')));
       } else if (action == CreateOrUpdateAction.Delete) {
-        // Replace '123' with the actual book ID for the book you want to delete
         final bookId = widget.id.toString();
         await Provider.of<BooksProvider>(context, listen: false)
             .deleteBook(bookId);
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Book deleted successfully!')));
 
-        // Navigate back to the book list screen after deletion
         Navigator.pop(context);
         Navigator.pushReplacement(
             context, MaterialPageRoute(builder: (context) => BooksList()));

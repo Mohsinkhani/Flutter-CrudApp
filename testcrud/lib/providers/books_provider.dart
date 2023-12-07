@@ -43,11 +43,14 @@ class BooksProvider with ChangeNotifier {
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
-        body: jsonEncode(newBook.toJson()),
+        body: jsonEncode(
+            newBook.toJsonForCreation()), // Use a separate method for creation
       );
 
       if (response.statusCode == 201) {
-        _books.add(newBook);
+        // Parse the created book from the response and add it to the local list
+        final createdBook = Books.fromJson(json.decode(response.body));
+        _books.add(createdBook);
       } else {
         throw Exception(
             'Failed to create book. Status Code: ${response.statusCode}');

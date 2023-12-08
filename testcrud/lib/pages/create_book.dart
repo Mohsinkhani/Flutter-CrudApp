@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:testcrud/widgets/all_books.dart';
 
 import '../models/books_model.dart';
 import '../providers/books_provider.dart';
-//import 'books_list.dart'; // Import the book list screen
+import '../widgets/all_books.dart';
 
 class BookForm extends StatefulWidget {
   final int? index;
@@ -14,7 +13,8 @@ class BookForm extends StatefulWidget {
   final String? category;
   final double? price;
 
-  BookForm({
+  const BookForm({
+    super.key,
     this.index,
     this.bookName,
     this.author,
@@ -28,6 +28,8 @@ class BookForm extends StatefulWidget {
 }
 
 class _BookFormState extends State<BookForm> {
+  final _formKey = GlobalKey<FormState>();
+
   TextEditingController nameController = TextEditingController();
   TextEditingController authorController = TextEditingController();
   TextEditingController categoryController = TextEditingController();
@@ -54,43 +56,84 @@ class _BookFormState extends State<BookForm> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Book Name'),
-              ),
-              TextFormField(
-                controller: authorController,
-                decoration: const InputDecoration(labelText: 'Author'),
-              ),
-              TextFormField(
-                controller: categoryController,
-                decoration: InputDecoration(labelText: 'Category'),
-              ),
-              TextFormField(
-                controller: priceController,
-                decoration: InputDecoration(labelText: 'Price'),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-              ),
-              SizedBox(height: 20),
-              Row(
+        child: ListView(
+          children: [
+            Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  TextFormField(
+                    controller: nameController,
+                    decoration: const InputDecoration(labelText: 'Book Name'),
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return 'Please enter a book name.';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: authorController,
+                    decoration: const InputDecoration(labelText: 'Author'),
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return 'Please enter the author\'s name.';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: categoryController,
+                    decoration: const InputDecoration(labelText: 'Category'),
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return 'Please enter the category.';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: priceController,
+                    decoration: const InputDecoration(labelText: 'Price'),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return 'Please enter the price.';
+                      }
+                      try {
+                        double.parse(value);
+                      } catch (e) {
+                        return 'Invalid price format. Please enter a valid number.';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
-                      _sendRequest(CreateOrUpdateAction.Create, context);
+                      _submitForm();
                     },
                     child: Text(widget.id == null ? 'Create' : 'Update'),
                   ),
                 ],
-              )
-            ],
-          ),
+              ),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  void _submitForm() {
+    if (_formKey.currentState!.validate()) {
+      if (widget.id != null) {
+        _sendRequest(CreateOrUpdateAction.Update, context);
+      } else {
+        _sendRequest(CreateOrUpdateAction.Create, context);
+      }
+    }
   }
 
   Future<void> _sendRequest(
@@ -100,7 +143,7 @@ class _BookFormState extends State<BookForm> {
       author: authorController.text,
       catogory: categoryController.text,
       price: double.parse(priceController.text),
-      // id: action != CreateOrUpdateAction.Create ? widget.id : null,
+      // id: action == CreateOrUpdateAction.Create ? null : widget.id,
     );
 
     try {
@@ -108,13 +151,16 @@ class _BookFormState extends State<BookForm> {
         await Provider.of<BooksProvider>(context, listen: false)
             .createBook(newBook);
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Book created successfully!')));
+            const SnackBar(content: Text('Book created successfully!')));
+
+        Navigator.pop(context, newBook);
       } else if (action == CreateOrUpdateAction.Update) {
         final bookId = widget.id.toString();
         await Provider.of<BooksProvider>(context, listen: false)
             .updateBook(newBook, bookId);
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Book updated successfully!')));
+        Navigator.pop(context, newBook);
       } else if (action == CreateOrUpdateAction.Delete) {
         final bookId = widget.id.toString();
         await Provider.of<BooksProvider>(context, listen: false)
@@ -123,8 +169,8 @@ class _BookFormState extends State<BookForm> {
             const SnackBar(content: Text('Book deleted successfully!')));
 
         Navigator.pop(context);
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => BooksList()));
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => const BooksList()));
       }
     } catch (error) {
       ScaffoldMessenger.of(context)

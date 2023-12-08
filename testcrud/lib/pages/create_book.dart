@@ -14,7 +14,6 @@ class BookForm extends StatefulWidget {
   final double? price;
 
   const BookForm({
-    super.key,
     this.index,
     this.bookName,
     this.author,
@@ -110,7 +109,7 @@ class _BookFormState extends State<BookForm> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
                       _submitForm();
@@ -153,13 +152,14 @@ class _BookFormState extends State<BookForm> {
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Book created successfully!')));
 
+        // Navigate back to the HomeScreen and highlight the new book
         Navigator.pop(context, newBook);
       } else if (action == CreateOrUpdateAction.Update) {
         final bookId = widget.id.toString();
         await Provider.of<BooksProvider>(context, listen: false)
             .updateBook(newBook, bookId);
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Book updated successfully!')));
+            const SnackBar(content: Text('Book updated successfully!')));
         Navigator.pop(context, newBook);
       } else if (action == CreateOrUpdateAction.Delete) {
         final bookId = widget.id.toString();

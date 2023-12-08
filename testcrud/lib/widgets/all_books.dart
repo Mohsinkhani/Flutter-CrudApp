@@ -18,53 +18,73 @@ class _BooksListState extends State<BooksList> {
       scrollDirection: Axis.vertical,
       child: Container(
         height: MediaQuery.of(context).size.height,
-        child: Consumer<BooksProvider>(
-          builder: (context, booksProvider, _) {
-            if (!booksProvider.isLoading && booksProvider.books.isEmpty) {
-              // Fetch data only if the list is empty and not already loading
-              booksProvider.fetchBooks();
-            }
+        child: Column(
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                _refreshBooks(context);
+              },
+              style: ElevatedButton.styleFrom(
+                primary: Colors.blue, // Background color
+                onPrimary: Colors.white, // Text color
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              ),
+              child: const Text(
+                'Refresh',
+                style: TextStyle(fontSize: 16.0),
+              ),
+            ),
+            Consumer<BooksProvider>(
+              builder: (context, booksProvider, _) {
+                if (!booksProvider.isLoading && booksProvider.books.isEmpty) {
+                  // Fetch data only if the list is empty and not already loading
+                  booksProvider.fetchBooks();
+                }
+                if (booksProvider.isLoading) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (booksProvider.error.isNotEmpty) {
+                  return Center(child: Text('Error: ${booksProvider.error}'));
+                } else if (booksProvider.books.isEmpty) {
+                  return Center(child: Text('No books available.'));
+                } else {
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: booksProvider.books.length,
+                    itemBuilder: (context, index) {
+                      final book = booksProvider.books[index];
 
-            if (booksProvider.isLoading) {
-              return Center(child: CircularProgressIndicator());
-            } else if (booksProvider.error.isNotEmpty) {
-              return Center(child: Text('Error: ${booksProvider.error}'));
-            } else if (booksProvider.books.isEmpty) {
-              return Center(child: Text('No books available.'));
-            } else {
-              return ListView.builder(
-                shrinkWrap: true,
-                itemCount: booksProvider.books.length,
-                itemBuilder: (context, index) {
-                  final book = booksProvider.books[index];
-
-                  return ListTile(
-                    title: Text(book.name),
-                    subtitle: Text(
-                      'Price: \$${book.price.toStringAsFixed(2)}',
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.edit),
-                          onPressed: () {
-                            _editBook(context, booksProvider, book, index);
-                          },
+                      return ListTile(
+                        title: Text(book.name),
+                        subtitle: Text(
+                          'Price: \$${book.price.toStringAsFixed(2)}',
                         ),
-                        IconButton(
-                          icon: Icon(Icons.delete),
-                          onPressed: () {
-                            _deleteBook(context, booksProvider, book);
-                          },
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.edit),
+                              onPressed: () {
+                                _editBook(context, booksProvider, book, index);
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete),
+                              onPressed: () {
+                                _deleteBook(context, booksProvider, book);
+                              },
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   );
-                },
-              );
-            }
-          },
+                }
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -87,7 +107,7 @@ class _BooksListState extends State<BooksList> {
     ).then((result) {
       if (result == true) {
         // Reload books after editing
-        booksProvider.fetchBooks();
+        _refreshBooks(context);
       }
     });
   }
@@ -111,6 +131,7 @@ class _BooksListState extends State<BooksList> {
               onPressed: () {
                 booksProvider.deleteBook(book.id);
                 Navigator.pop(context, true);
+                _refreshBooks(context);
               },
               child: const Text('Yes'),
             ),
@@ -118,5 +139,9 @@ class _BooksListState extends State<BooksList> {
         );
       },
     );
+  }
+
+  void _refreshBooks(BuildContext context) {
+    Provider.of<BooksProvider>(context, listen: false).fetchBooks();
   }
 }
